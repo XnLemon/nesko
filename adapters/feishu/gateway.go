@@ -38,10 +38,10 @@ func NewGateway(cfg GatewayConfig, handler RequestHandler, logger *slog.Logger) 
 	cfg.AppSecret = strings.TrimSpace(cfg.AppSecret)
 	cfg.BotOpenID = strings.TrimSpace(cfg.BotOpenID)
 	if cfg.AppID == "" || cfg.AppSecret == "" {
-		return nil, errors.New("Feishu app ID and app secret are required")
+		return nil, errors.New("feishu app ID and app secret are required")
 	}
 	if handler == nil {
-		return nil, errors.New("Feishu request handler is required")
+		return nil, errors.New("feishu request handler is required")
 	}
 	if logger == nil {
 		logger = slog.Default()

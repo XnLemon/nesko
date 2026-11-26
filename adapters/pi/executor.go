@@ -37,10 +37,10 @@ func (e *Executor) Execute(ctx context.Context, input nesko.ExecutionInput, repo
 		return nesko.ExecutionResult{}, err
 	}
 	if !promptAccepted {
-		return nesko.ExecutionResult{}, errors.New("Pi settled without accepting the ticket prompt")
+		return nesko.ExecutionResult{}, errors.New("pi settled without accepting the ticket prompt")
 	}
 	if settled.aborted {
-		return nesko.ExecutionResult{}, errors.New("Pi aborted the ticket run")
+		return nesko.ExecutionResult{}, errors.New("pi aborted the ticket run")
 	}
 	finalText, err := requestFinalText(ctx, e, session, report)
 	if err != nil {
@@ -61,10 +61,10 @@ func (e *Executor) Execute(ctx context.Context, input nesko.ExecutionInput, repo
 
 func validateExecutionInput(input nesko.ExecutionInput) error {
 	if input.RunID == "" || input.Ticket.ID == "" {
-		return errors.New("Pi execution requires a ticket ID and run ID")
+		return errors.New("pi execution requires a ticket ID and run ID")
 	}
 	if input.Ticket.Decision == nil {
-		return errors.New("Pi execution requires a validated ticket decision")
+		return errors.New("pi execution requires a validated ticket decision")
 	}
 	if err := input.Ticket.Decision.Validate(); err != nil {
 		return fmt.Errorf("validate Pi ticket decision: %w", err)

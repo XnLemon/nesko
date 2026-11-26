@@ -29,7 +29,11 @@ func run() (runErr error) {
 	if err != nil {
 		return fmt.Errorf("create integration sample directory: %w", err)
 	}
-	defer os.RemoveAll(directory)
+	defer func() {
+		if err := os.RemoveAll(directory); err != nil {
+			runErr = errors.Join(runErr, fmt.Errorf("remove integration sample directory: %w", err))
+		}
+	}()
 	repository, err := sqlite.NewTicketRepository(filepath.Join(directory, "tickets.sqlite"))
 	if err != nil {
 		return fmt.Errorf("open integration sample repository: %w", err)

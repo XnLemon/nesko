@@ -66,7 +66,7 @@ func NewExecutor(config Config) (*Executor, error) {
 	provider := strings.TrimSpace(config.Provider)
 	model := strings.TrimSpace(config.Model)
 	if provider != "" && model == "" {
-		return nil, errors.New("Pi provider requires a model")
+		return nil, errors.New("pi provider requires a model")
 	}
 	binaryPath := strings.TrimSpace(config.BinaryPath)
 	if binaryPath == "" {
@@ -87,7 +87,7 @@ func NewExecutor(config Config) (*Executor, error) {
 func resolveWorkingDirectory(directory string) (string, error) {
 	directory = strings.TrimSpace(directory)
 	if directory == "" {
-		return "", errors.New("Pi working directory is required")
+		return "", errors.New("pi working directory is required")
 	}
 	absolute, err := filepath.Abs(directory)
 	if err != nil {
@@ -98,7 +98,7 @@ func resolveWorkingDirectory(directory string) (string, error) {
 		return "", fmt.Errorf("inspect Pi working directory: %w", err)
 	}
 	if !info.IsDir() {
-		return "", errors.New("Pi working directory must be a directory")
+		return "", errors.New("pi working directory must be a directory")
 	}
 	return absolute, nil
 }
@@ -111,7 +111,7 @@ func normalizeTools(tools []string) ([]string, error) {
 	for index, tool := range tools {
 		tool = strings.TrimSpace(tool)
 		if tool == "" || strings.Contains(tool, ",") {
-			return nil, errors.New("Pi tool names must be non-empty and must not contain commas")
+			return nil, errors.New("pi tool names must be non-empty and must not contain commas")
 		}
 		normalized[index] = tool
 	}

@@ -1,0 +1,11 @@
+version: "2"
+
+linters:
+  default: standard
+  settings:
+    errcheck:
+      # These deferred cleanup calls are best-effort after the primary operation.
+      exclude-functions:
+        - (io.ReadCloser).Close
+        - (*database/sql.Rows).Close
+        - (*database/sql.Tx).Rollback

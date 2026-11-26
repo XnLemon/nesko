@@ -102,6 +102,6 @@ func (s *rpcSession) wait(ctx context.Context, timeout time.Duration) error {
 		_ = s.command.Process.Kill()
 		<-waitResult
 		s.processWaited = true
-		return fmt.Errorf("Pi process did not exit within %s", timeout)
+		return fmt.Errorf("pi process did not exit within %s", timeout)
 	}
 }

@@ -93,7 +93,7 @@ func (c *OpenAIResponsesClient) Complete(ctx context.Context, systemPrompt, user
 		return "", fmt.Errorf("get Judge access token: %w", err)
 	}
 	if strings.TrimSpace(token) == "" {
-		return "", errors.New("Judge access token is empty")
+		return "", errors.New("judge access token is empty")
 	}
 
 	body, err := json.Marshal(responsesRequest{
@@ -125,9 +125,9 @@ func (c *OpenAIResponsesClient) Complete(ctx context.Context, systemPrompt, user
 			return "", fmt.Errorf("read Judge Responses error: %w", err)
 		}
 		if len(responseBody) > maxModelResponseBytes {
-			return "", fmt.Errorf("Judge Responses error exceeds %d bytes", maxModelResponseBytes)
+			return "", fmt.Errorf("judge Responses error exceeds %d bytes", maxModelResponseBytes)
 		}
-		return "", fmt.Errorf("Judge Responses API returned HTTP %d: %s", response.StatusCode, compactErrorBody(responseBody))
+		return "", fmt.Errorf("judge Responses API returned HTTP %d: %s", response.StatusCode, compactErrorBody(responseBody))
 	}
 	return readResponsesStream(response.Body)
 }
@@ -141,7 +141,7 @@ func readResponsesStream(reader io.Reader) (string, error) {
 	for scanner.Scan() {
 		totalBytes += len(scanner.Bytes()) + 1
 		if totalBytes > maxModelResponseBytes {
-			return "", fmt.Errorf("Judge Responses stream exceeds %d bytes", maxModelResponseBytes)
+			return "", fmt.Errorf("judge Responses stream exceeds %d bytes", maxModelResponseBytes)
 		}
 		if err := processResponsesStreamLine(scanner.Bytes(), &output, &completed); err != nil {
 			return "", err
@@ -151,10 +151,10 @@ func readResponsesStream(reader io.Reader) (string, error) {
 		return "", fmt.Errorf("read Judge Responses stream: %w", err)
 	}
 	if !completed {
-		return "", errors.New("Judge Responses stream ended before response.completed")
+		return "", errors.New("judge Responses stream ended before response.completed")
 	}
 	if output.Len() == 0 {
-		return "", errors.New("Judge Responses completed without output text")
+		return "", errors.New("judge Responses completed without output text")
 	}
 	return output.String(), nil
 }
@@ -178,13 +178,13 @@ func handleResponsesStreamEvent(event responsesStreamEvent, output *strings.Buil
 	switch event.Type {
 	case "response.output_text.delta":
 		if output.Len()+len(event.Delta) > maxModelResponseBytes {
-			return fmt.Errorf("Judge Responses output exceeds %d bytes", maxModelResponseBytes)
+			return fmt.Errorf("judge Responses output exceeds %d bytes", maxModelResponseBytes)
 		}
 		output.WriteString(event.Delta)
 	case "response.failed":
-		return fmt.Errorf("Judge Responses request failed: %s", responseStreamError(event))
+		return fmt.Errorf("judge Responses request failed: %s", responseStreamError(event))
 	case "response.incomplete":
-		return fmt.Errorf("Judge Responses request incomplete: %s", responseStreamError(event))
+		return fmt.Errorf("judge Responses request incomplete: %s", responseStreamError(event))
 	case "response.completed":
 		*completed = true
 	}

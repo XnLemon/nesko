@@ -28,7 +28,7 @@ func (e *Executor) waitForAgent(ctx context.Context, lines <-chan rpcLine, promp
 			}
 		case line, ok := <-lines:
 			if !ok {
-				return settledEvent{}, promptAccepted, errors.New("Pi RPC stdout closed before the agent settled")
+				return settledEvent{}, promptAccepted, errors.New("pi RPC stdout closed before the agent settled")
 			}
 			if line.err != nil {
 				return settledEvent{}, promptAccepted, fmt.Errorf("read Pi RPC record: %w", line.err)
@@ -68,7 +68,7 @@ func handleAgentRecord(record rpcRecord, promptID string, promptAccepted bool, r
 			return promptAccepted, nil, err
 		}
 	case "extension_error":
-		return promptAccepted, nil, fmt.Errorf("Pi extension error: %s", record.Error)
+		return promptAccepted, nil, fmt.Errorf("pi extension error: %s", record.Error)
 	}
 	return promptAccepted, nil, nil
 }
@@ -78,14 +78,14 @@ func handlePromptResponse(record rpcRecord, promptID string, promptAccepted bool
 		return promptAccepted, nil
 	}
 	if !record.Success {
-		return false, fmt.Errorf("Pi rejected the prompt: %s", record.Error)
+		return false, fmt.Errorf("pi rejected the prompt: %s", record.Error)
 	}
 	disposition, err := responseDisposition(record.Data)
 	if err != nil {
 		return false, err
 	}
 	if disposition == "handled" {
-		return false, errors.New("Pi handled the prompt without starting an agent run")
+		return false, errors.New("pi handled the prompt without starting an agent run")
 	}
 	if err := reportProgress(report, "Pi began processing the ticket"); err != nil {
 		return true, err
@@ -118,7 +118,7 @@ func (e *Executor) readFinalText(ctx context.Context, lines <-chan rpcLine, resp
 			}
 		case line, ok := <-lines:
 			if !ok {
-				return "", errors.New("Pi RPC stdout closed before returning its final response")
+				return "", errors.New("pi RPC stdout closed before returning its final response")
 			}
 			if line.err != nil {
 				return "", fmt.Errorf("read Pi final response: %w", line.err)
@@ -143,7 +143,7 @@ func finalTextResponse(record rpcRecord, responseID string) (string, bool, error
 		return "", false, nil
 	}
 	if !record.Success {
-		return "", true, fmt.Errorf("Pi could not return its final response: %s", record.Error)
+		return "", true, fmt.Errorf("pi could not return its final response: %s", record.Error)
 	}
 	var data struct {
 		Text *string `json:"text"`

@@ -132,7 +132,7 @@ func responseDisposition(data json.RawMessage) (string, error) {
 	case "started", "queued", "handled":
 		return response.Disposition, nil
 	default:
-		return "", fmt.Errorf("Pi returned unsupported prompt disposition %q", response.Disposition)
+		return "", fmt.Errorf("pi returned unsupported prompt disposition %q", response.Disposition)
 	}
 }
 

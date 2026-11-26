@@ -25,7 +25,7 @@ func NewMessenger(appID, appSecret string) (*Messenger, error) {
 	appID = strings.TrimSpace(appID)
 	appSecret = strings.TrimSpace(appSecret)
 	if appID == "" || appSecret == "" {
-		return nil, errors.New("Feishu app ID and app secret are required")
+		return nil, errors.New("feishu app ID and app secret are required")
 	}
 	client := lark.NewClient(
 		appID,
@@ -40,7 +40,7 @@ func NewMessenger(appID, appSecret string) (*Messenger, error) {
 func (m *Messenger) ReplyToMessage(ctx context.Context, input ports.ReplyInput) (string, error) {
 	if input.Channel != nesko.ChannelFeishu || strings.TrimSpace(input.MessageID) == "" ||
 		strings.TrimSpace(input.Text) == "" || strings.TrimSpace(input.IdempotencyKey) == "" {
-		return "", errors.New("Feishu reply requires a Feishu channel, message ID, text, and idempotency key")
+		return "", errors.New("feishu reply requires a Feishu channel, message ID, text, and idempotency key")
 	}
 	content, err := json.Marshal(map[string]string{"text": input.Text})
 	if err != nil {
@@ -55,18 +55,18 @@ func (m *Messenger) ReplyToMessage(ctx context.Context, input ports.ReplyInput) 
 			Build()).
 		Build()
 
-	response, err := m.client.Im.V1.Message.Reply(ctx, request)
+	response, err := m.client.Im.Message.Reply(ctx, request)
 	if err != nil {
 		return "", err
 	}
 	if response == nil {
-		return "", fmt.Errorf("Feishu reply returned an empty response")
+		return "", fmt.Errorf("feishu reply returned an empty response")
 	}
 	if !response.Success() {
-		return "", fmt.Errorf("Feishu reply failed (%d): %s", response.Code, response.Msg)
+		return "", fmt.Errorf("feishu reply failed (%d): %s", response.Code, response.Msg)
 	}
 	if response.Data == nil || response.Data.MessageId == nil || strings.TrimSpace(*response.Data.MessageId) == "" {
-		return "", fmt.Errorf("Feishu reply returned no reply message ID")
+		return "", fmt.Errorf("feishu reply returned no reply message ID")
 	}
 	return *response.Data.MessageId, nil
 }
