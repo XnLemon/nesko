@@ -2,7 +2,9 @@ package feishu
 
 import (
 	"context"
+	"errors"
 	"log/slog"
+	"strings"
 
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher"
@@ -31,7 +33,27 @@ type Gateway struct {
 }
 
 // NewGateway creates the Feishu event client and registers message handling.
-func NewGateway(cfg GatewayConfig, handler RequestHandler, logger *slog.Logger) *Gateway {
+func NewGateway(cfg GatewayConfig, handler RequestHandler, logger *slog.Logger) (*Gateway, error) {
+	cfg.AppID = strings.TrimSpace(cfg.AppID)
+	cfg.AppSecret = strings.TrimSpace(cfg.AppSecret)
+	cfg.BotOpenID = strings.TrimSpace(cfg.BotOpenID)
+	if cfg.AppID == "" || cfg.AppSecret == "" {
+		return nil, errors.New("Feishu app ID and app secret are required")
+	}
+	if handler == nil {
+		return nil, errors.New("Feishu request handler is required")
+	}
+	if logger == nil {
+		logger = slog.Default()
+	}
+	allowedOpenIDs := make(map[string]struct{}, len(cfg.AllowedOpenIDs))
+	for openID := range cfg.AllowedOpenIDs {
+		if openID = strings.TrimSpace(openID); openID != "" {
+			allowedOpenIDs[openID] = struct{}{}
+		}
+	}
+	cfg.AllowedOpenIDs = allowedOpenIDs
+
 	eventHandler := dispatcher.NewEventDispatcher("", "")
 	eventHandler.OnP2MessageReceiveV1(func(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
 		request, ok := normalizeMessage(event, cfg)
@@ -40,6 +62,7 @@ func NewGateway(cfg GatewayConfig, handler RequestHandler, logger *slog.Logger) 
 		}
 		if err := handler.Handle(ctx, request); err != nil {
 			logger.Error("failed to process Feishu message", "message_id", request.MessageID, "error", err)
+			return err
 		}
 		return nil
 	})
@@ -63,7 +86,7 @@ func NewGateway(cfg GatewayConfig, handler RequestHandler, logger *slog.Logger) 
 		logger.Error("Feishu long connection failed", "error", err)
 	})
 
-	return &Gateway{client: client}
+	return &Gateway{client: client}, nil
 }
 
 // Run starts the long connection until the context is canceled or it fails.

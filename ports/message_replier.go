@@ -4,6 +4,8 @@ import "context"
 
 // ReplyInput describes a reply to an inbound channel message.
 type ReplyInput struct {
+	Channel        string
+	ConversationID string
 	MessageID      string
 	Text           string
 	IdempotencyKey string
