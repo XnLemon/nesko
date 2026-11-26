@@ -109,58 +109,16 @@ func (c *Client) ListPullRequestFiles(ctx context.Context, ref RepositoryRef, nu
 	return files, nil
 }
 
-// ListPullRequestReviews returns one page of submitted reviews.
-func (c *Client) ListPullRequestReviews(ctx context.Context, ref RepositoryRef, number int, page PageOptions) ([]*gh.PullRequestReview, error) {
+// ListPullRequestCommits returns one page of commits in a pull request.
+func (c *Client) ListPullRequestCommits(ctx context.Context, ref RepositoryRef, number int, page PageOptions) ([]*gh.RepositoryCommit, error) {
 	if err := validateResource(ref, number); err != nil {
 		return nil, err
 	}
-	reviews, _, err := c.api.PullRequests.ListReviews(ctx, ref.Owner, ref.Name, number, page.listOptions())
+	commits, _, err := c.api.PullRequests.ListCommits(ctx, ref.Owner, ref.Name, number, page.listOptions())
 	if err != nil {
-		return nil, fmt.Errorf("list reviews for GitHub pull request %s/%s#%d: %w", ref.Owner, ref.Name, number, err)
+		return nil, fmt.Errorf("list commits for GitHub pull request %s/%s#%d: %w", ref.Owner, ref.Name, number, err)
 	}
-	return reviews, nil
-}
-
-// CreatePullRequestReview submits a review or creates a pending review when event is empty.
-func (c *Client) CreatePullRequestReview(ctx context.Context, ref RepositoryRef, number int, commitSHA, body, event string) (*gh.PullRequestReview, error) {
-	if err := validateResource(ref, number); err != nil {
-		return nil, err
-	}
-	event = strings.ToUpper(strings.TrimSpace(event))
-	if event != "" && event != "APPROVE" && event != "REQUEST_CHANGES" && event != "COMMENT" {
-		return nil, fmt.Errorf("unsupported GitHub review event %q", event)
-	}
-	if event != "" && strings.TrimSpace(body) == "" {
-		return nil, errors.New("GitHub submitted review body is required")
-	}
-	request := &gh.PullRequestReviewRequest{Body: &body}
-	if commitSHA = strings.TrimSpace(commitSHA); commitSHA != "" {
-		request.CommitID = &commitSHA
-	}
-	if event != "" {
-		request.Event = &event
-	}
-	review, _, err := c.api.PullRequests.CreateReview(ctx, ref.Owner, ref.Name, number, request)
-	if err != nil {
-		return nil, fmt.Errorf("create review for GitHub pull request %s/%s#%d: %w", ref.Owner, ref.Name, number, err)
-	}
-	return review, nil
-}
-
-// RequestPullRequestReviewers requests reviews from users or teams.
-func (c *Client) RequestPullRequestReviewers(ctx context.Context, ref RepositoryRef, number int, users, teams []string) (*gh.PullRequest, error) {
-	if err := validateResource(ref, number); err != nil {
-		return nil, err
-	}
-	if len(users) == 0 && len(teams) == 0 {
-		return nil, errors.New("at least one GitHub reviewer or team is required")
-	}
-	request := gh.ReviewersRequest{Reviewers: compactStrings(users), TeamReviewers: compactStrings(teams)}
-	pullRequest, _, err := c.api.PullRequests.RequestReviewers(ctx, ref.Owner, ref.Name, number, request)
-	if err != nil {
-		return nil, fmt.Errorf("request reviewers for GitHub pull request %s/%s#%d: %w", ref.Owner, ref.Name, number, err)
-	}
-	return pullRequest, nil
+	return commits, nil
 }
 
 // UpdatePullRequestBranch asks GitHub to merge the current base into the pull request branch.
@@ -168,10 +126,11 @@ func (c *Client) UpdatePullRequestBranch(ctx context.Context, ref RepositoryRef,
 	if err := validateResource(ref, number); err != nil {
 		return err
 	}
-	request := gh.UpdatePullRequestBranchRequest{}
-	if expectedHeadSHA = strings.TrimSpace(expectedHeadSHA); expectedHeadSHA != "" {
-		request.ExpectedHeadSHA = &expectedHeadSHA
+	expectedHeadSHA = strings.TrimSpace(expectedHeadSHA)
+	if expectedHeadSHA == "" {
+		return errors.New("expected GitHub pull request head SHA is required")
 	}
+	request := gh.UpdatePullRequestBranchRequest{ExpectedHeadSHA: &expectedHeadSHA}
 	if _, _, err := c.api.PullRequests.UpdateBranch(ctx, ref.Owner, ref.Name, number, request); err != nil {
 		return fmt.Errorf("update branch for GitHub pull request %s/%s#%d: %w", ref.Owner, ref.Name, number, err)
 	}
@@ -184,34 +143,21 @@ func (c *Client) MergePullRequest(ctx context.Context, ref RepositoryRef, number
 		return nil, err
 	}
 	method := strings.ToLower(strings.TrimSpace(options.Method))
-	if method != "" && method != "merge" && method != "squash" && method != "rebase" {
+	if method != "merge" && method != "squash" && method != "rebase" {
 		return nil, fmt.Errorf("unsupported GitHub merge method %q", options.Method)
 	}
+	expectedHead := strings.TrimSpace(options.ExpectedHead)
+	if expectedHead == "" {
+		return nil, errors.New("expected GitHub pull request head SHA is required")
+	}
 	request := &gh.PullRequestOptions{
-		MergeMethod: strings.TrimSpace(method),
+		MergeMethod: method,
 		CommitTitle: strings.TrimSpace(options.CommitTitle),
-		SHA:         strings.TrimSpace(options.ExpectedHead),
+		SHA:         expectedHead,
 	}
 	result, _, err := c.api.PullRequests.Merge(ctx, ref.Owner, ref.Name, number, options.CommitMessage, request)
 	if err != nil {
 		return result, fmt.Errorf("merge GitHub pull request %s/%s#%d: %w", ref.Owner, ref.Name, number, err)
 	}
 	return result, nil
-}
-
-func compactStrings(values []string) []string {
-	result := make([]string, 0, len(values))
-	seen := make(map[string]struct{}, len(values))
-	for _, value := range values {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			continue
-		}
-		if _, exists := seen[value]; exists {
-			continue
-		}
-		seen[value] = struct{}{}
-		result = append(result, value)
-	}
-	return result
 }

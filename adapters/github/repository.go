@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,8 +30,9 @@ func (c *Client) GetAuthenticatedUser(ctx context.Context) (*gh.User, error) {
 	return user, nil
 }
 
-// CreateFork requests a fork. GitHub may return an accepted response while it
-// prepares the fork; callers can use the returned repository and retry GetRepository.
+// CreateFork requests a fork. GitHub may accept the request before the fork is
+// ready; that accepted response is returned as success with repository metadata.
+// Callers can poll GetRepository with the returned owner's and name's values.
 func (c *Client) CreateFork(ctx context.Context, source RepositoryRef, organization string) (*gh.Repository, error) {
 	if err := source.validate(); err != nil {
 		return nil, err
@@ -41,6 +43,10 @@ func (c *Client) CreateFork(ctx context.Context, source RepositoryRef, organizat
 	}
 	repository, _, err := c.api.Repositories.CreateFork(ctx, source.Owner, source.Name, request)
 	if err != nil {
+		var accepted *gh.AcceptedError
+		if errors.As(err, &accepted) {
+			return repository, nil
+		}
 		return repository, fmt.Errorf("create fork of %s/%s: %w", source.Owner, source.Name, err)
 	}
 	return repository, nil
