@@ -22,6 +22,10 @@ Architecture pages describe how the project is implemented today. Do not add pla
 - 两种语言的内容含义保持一致，并在同一次变更中更新。
 - 使用 Markdown，文件名采用小写 kebab-case，例如 `system-overview.md`。
 
+Start from the language index: [`docs/en/index.md`](en/index.md) or [`docs/zh/index.md`](zh/index.md). The pages are split into core domain, ports, service internals, and one page per adapter.
+
+从语言索引开始阅读：[`docs/en/index.md`](en/index.md) 或 [`docs/zh/index.md`](zh/index.md)。文档按 core 领域模型、ports、service 内部流程和各 adapter 分页。
+
 ## Current implementation only / 只描述当前实现
 
 - Document behavior and structure that are verifiable in the current source code and configuration.
