@@ -2,6 +2,7 @@ package pi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -95,13 +96,20 @@ func (s *rpcSession) wait(ctx context.Context, timeout time.Duration) error {
 		return nil
 	case <-ctx.Done():
 		_ = s.command.Process.Kill()
-		<-waitResult
+		waitErr := <-waitResult
 		s.processWaited = true
+		if waitErr != nil {
+			return errors.Join(ctx.Err(), fmt.Errorf("wait for pi process after cancellation: %w", waitErr))
+		}
 		return ctx.Err()
 	case <-timer.C:
 		_ = s.command.Process.Kill()
-		<-waitResult
+		waitErr := <-waitResult
 		s.processWaited = true
-		return fmt.Errorf("pi process did not exit within %s", timeout)
+		timeoutErr := fmt.Errorf("pi process did not exit within %s", timeout)
+		if waitErr != nil {
+			return errors.Join(timeoutErr, fmt.Errorf("wait for pi process after timeout: %w", waitErr))
+		}
+		return timeoutErr
 	}
 }
