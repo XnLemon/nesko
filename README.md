@@ -7,3 +7,5 @@ The core receives Feishu text messages, applies sender and group-mention policy,
 Architecture documentation is maintained in [`docs/zh/`](docs/zh/) and [`docs/en/`](docs/en/).
 
 The [`samples/core-loop/`](samples/core-loop/) directory shows a live caller composition for ticket intake, Judge assessment, policy routing, Pi execution, and SQLite persistence. [`samples/core-integration/`](samples/core-integration/) runs an offline end-to-end example of intake, assessment, execution, event history, and stale-run recovery.
+
+The [`samples/github-adapter/`](samples/github-adapter/) directory shows read-only repository and pull-request inspection through the GitHub adapter.
