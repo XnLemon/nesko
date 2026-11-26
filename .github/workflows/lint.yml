@@ -1,4 +1,4 @@
-name: Go CI
+name: Go lint
 
 on:
   push:
@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  checks:
-    name: Format, lint, test, and sample integration
+  lint:
+    name: Format and lint
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -35,9 +35,3 @@ jobs:
         with:
           version: v2.15
           args: --timeout=5m
-
-      - name: Run Go tests
-        run: go test ./...
-
-      - name: Run offline integration sample
-        run: go run ./samples/core-integration

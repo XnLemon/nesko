@@ -1,0 +1,29 @@
+name: Sample integration tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-test:
+    name: Offline sample integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test sample integration flow
+        run: go test -tags=integration -count=1 ./samples/core-integration
+
+      - name: Run sample integration command
+        run: go run ./samples/core-integration
