@@ -23,7 +23,7 @@
 
 `ports.ExecutorRouter` 根据执行请求选择具体执行器；`ports.ExecutorRouterFunc` 可将路由函数适配为该接口。可选的 `ports.WorkspaceManager` 为一次执行准备调用方拥有的 workspace，并在执行后释放；目录选择和仓库操作由 manager 实现，core 将选定目录传给执行器。`adapters/pi.Executor` 优先使用每次执行传入的 workspace，否则使用配置的固定工作目录。它启动 `pi --mode rpc --no-session`，默认启用 `read`、`grep`、`find`、`ls`、`bash`、`edit` 和 `write` 工具，并关闭 MCP 与扩展。执行器等待 `agent_settled` 后读取最后一条助手文本，根据 `NeskoResult` 结果行生成终态；缺失或格式错误时按 `needs_review` 处理。Pi 工具事件会转为工单进度，执行等待期间按默认 20 秒间隔发送心跳。
 
-工作目录是 Pi 进程的当前目录与提示词约束，并非操作系统级沙箱。Pi executor 负责本地代码执行与结果回报；工单工作流不创建分支或工作树，也不创建 PR、运行 CI 或合并代码。
+工作目录是 Pi 进程的当前目录与提示词约束，并非操作系统级沙箱。Pi executor 负责本地代码执行与结果回报。工单工作流不编排 GitHub 操作。`adapters/github.Client` 提供仓库查询、fork 创建、issue 与评论操作，以及 PR 操作，包括提交 review、请求 reviewer、更新分支和显式合并。仓库、分支、合并方式和操作时机由调用方选择；该适配器不应用合并或审批策略。本地分支、工作树、commit 和 push 由调用方的 workspace 与 Git 工具负责。
 
 `ports.Executor` 接收带执行 ID 的工单，并通过回调报告心跳和进度。配置 `ports.ExecutionRunRepository` 后，工作流会为每次执行保存不可变的指令与 Judge 决策快照，以及有序的启动、workspace、心跳、进度和终态事件。Run 查询包含最近心跳，SQLite 也提供活跃 Run 查询，供调用方 supervisor 管理。`ports.ExecutionLifecycleRepository` 允许适配器原子地启动工单与 Run，并原子保存 completed、review、waiting-human 和 failed 结果。工单本身保存当前状态、评估和策略决策、当前执行 ID、最近心跳和进度、结果摘要及失败原因。
 
